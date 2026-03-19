@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "503721719130",
+    "project_id": "true-application3",
+    "storage_bucket": "true-application3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503721719130:android:a7bbddbcbf2f9672b26f63",
+        "android_client_info": {
+          "package_name": "com.example.true_application_3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC75HXZaSkMwbG2z0n_Zbb3l9AwJ_ZOAn4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -81,19 +81,4 @@ class DefaultFirebaseOptions {
     authDomain: 'true-application3.firebaseapp.com',
     storageBucket: 'true-application3.firebasestorage.app',
   );
-  // Future AdditionalUserInfo(Map<String, dynamic> userInfoMap, String Id) async {
-  //   await FirebaseFirestore.instance
-  //       .collection("user")
-  //       .doc(Id)
-  //       .collection("Expense")
-  //       .add(userInfoMap);
-  // }
-
-  // Future addUserExpense(Map<String, dynamic> userExpense, String Id) async {
-  //   await FirebaseFirestore.instance
-  //       .collection("user")
-  //       .doc(Id)
-  //       .collection("Expense")
-  //       .add(userExpense);
-  // }
 }

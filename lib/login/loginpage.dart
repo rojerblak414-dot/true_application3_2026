@@ -12,25 +12,20 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   bool isLoading = false;
-
   Future<void> login() async {
     setState(() => isLoading = true);
-
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
-      // ✅ ถ้า login สำเร็จ → ไปหน้า Home
+      // ຖ້າ login ສຳເລັດໄຫ້ໄປຫ້ນາ → Home
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on FirebaseAuthException catch (e) {
       String message = "ເກີດຂໍ້ຜິດພາດ";
-
       if (e.code == 'user-not-found') {
         message = "ບໍ່ພົບອີເມວນີໃນລະບົບ";
       } else if (e.code == 'wrong-password') {
@@ -40,12 +35,10 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         message = "ອີເມວຫຼືລະຫັດບໍ່ຖືກຕ້ອງ";
       }
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     }
-
     setState(() => isLoading = false);
   }
 
@@ -65,15 +58,13 @@ class _LoginPageState extends State<LoginPage> {
                   ClipRRect(
                     borderRadius: BorderRadiusGeometry.circular(60),
                     child: Image.asset(
-                      "assets/images/oak.jpg",
-                      height: 100,
-                      width: 100,
+                      "assets/images/in.png",
+                      height: 200,
+                      width: 200,
                       fit: BoxFit.cover,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   const Text(
                     "Let's start tracking",
                     style: TextStyle(
@@ -82,29 +73,22 @@ class _LoginPageState extends State<LoginPage> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
                   const Text(
                     "income & expenses",
                     style: TextStyle(color: Colors.orange, fontSize: 16),
                   ),
-
                   const SizedBox(height: 20),
-
                   const Text(
                     "WELCOME",
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // 📧 Email
                   inputfield_loginpage(
                     controller: emailController,
                     icon: Icons.email,
                     hint: "Email",
                     obscure: false,
                   ),
-
                   const SizedBox(height: 15),
                   // Password
                   inputfield_loginpage(
@@ -113,9 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                     hint: "Password",
                     obscure: true,
                   ),
-
                   const SizedBox(height: 25),
-
                   SizedBox(
                     width: 500,
                     height: 50,
@@ -129,12 +111,18 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Login", style: TextStyle(fontSize: 20)),
+                          : const Text(
+                              "ເຂົ້າສູ່ລະບົບ",
+                              style: TextStyle(fontSize: 20),
+                            ),
                     ),
                   ),
                   SizedBox(height: 20),
 
-                  Text(" Don't have an account ?"),
+                  Text(
+                    "ທ່ານຍັງບໍ່ມີບັນຊີ ?",
+                    style: TextStyle(color: Colors.black),
+                  ),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -143,11 +131,10 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     },
                     child: Text(
-                      " Register",
-                      style: TextStyle(color: Colors.red, fontSize: 18.0),
+                      "ລົງທະບຽນຜູ້ໃຊ້ງານໃໝ່",
+                      style: TextStyle(color: Colors.red, fontSize: 16.0),
                     ),
                   ),
-
                   const SizedBox(height: 15),
                 ],
               ),

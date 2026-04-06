@@ -10,12 +10,11 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ใช้ Future เพื่อสั่งให้ Firebase รีโหลดข้อมูลล่าสุดก่อนแสดงผล
+    //  ໃຊ້ Future ເພື່ອສັງໄຫ້ Firebase ລີໂລດຂໍ້ມູນລາສຸດກອນສະແດງຜົນ
     return FutureBuilder(
       future: FirebaseAuth.instance.currentUser?.reload(),
       builder: (context, snapshot) {
-        final user =
-            FirebaseAuth.instance.currentUser; // ดึงข้อมูล User ปัจจุบัน
+        final user = FirebaseAuth.instance.currentUser; // ດຶ່ງ User ປັດຈຸບັນ
 
         return Scaffold(
           appBar: AppBar(title: const Text("Profile"), centerTitle: true),
@@ -24,19 +23,11 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
-                // รูปโปรไฟล์ (ถ้ามี photoURL ให้ใช้ ถ้าไม่มีใช้รูปเดิม)
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
-                      : const AssetImage("assets/images/oak.jpg")
-                            as ImageProvider,
-                ),
+                CircleAvatar(radius: 50, child: Icon(Icons.handshake)),
 
                 const SizedBox(height: 30),
 
-                // แสดงชื่อ (จะดึงมาจากชื่อที่บันทึกตอนสมัคร)
+                // ສະແດງຊື່ ຈະດືງມາຈາກຊື່ທິບັນທືກຕອນສະໝັກ
                 myinfo_box(
                   icon: Icons.person,
                   title: "Name",
@@ -45,7 +36,7 @@ class ProfilePage extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // แสดง Email
+                //ສະແດງ Email
                 myinfo_box(
                   icon: Icons.email,
                   title: "Email",
@@ -72,7 +63,36 @@ class ProfilePage extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const AddIncomePage()),
                   ),
                 ),
-                // ... ส่วนที่เหลือของโค้ดคุณ (Add Expense/Income) ...
+                SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(
+                    Icons.logout,
+                    color: Colors.red,
+                  ), // ไอคอน Logout สีแดง
+                  title: const Text(
+                    "Logout",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () async {
+                    // 1. ຍືນຍັນການອອກຈາກລະບົບ Firebase
+                    await FirebaseAuth.instance.signOut(); //
+
+                    // 2. ປິດໜ້າ Drawer
+                    if (context.mounted) Navigator.pop(context);
+
+                    // 3. ກັບໄປໜ້າ  Login ແລະລົບປະຫວັດເກົ່າທັງໝົດ
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/',
+                        (route) => false,
+                      );
+                    }
+                  },
+                ),
               ],
             ),
           ),

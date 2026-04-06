@@ -21,16 +21,6 @@ class my_builheader extends StatelessWidget {
           "Manage your expenses",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-
-        Text(
-          "1 March 2025 - 30 March 2025",
-          style: TextStyle(
-            fontSize: 20,
-            color: CupertinoColors.inactiveGray,
-            fontWeight: FontWeight.bold,
-            height: 1.2,
-          ),
-        ),
       ],
     );
   }

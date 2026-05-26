@@ -13,7 +13,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final TextEditingController amountController = TextEditingController();
   String selectedCategory = "Car";
 
-  final List<String> categories = ["Car", "Lottery", "Food"];
+  final List<String> categories = ["Car", "Internet", "Food"];
   //ສ້າງຕົວແປຂອງວັນທີຂອງປະຕິທິນ
   DateTime selectedDate = DateTime.now();
 

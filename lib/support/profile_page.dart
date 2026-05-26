@@ -23,7 +23,7 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                CircleAvatar(radius: 50, child: Icon(Icons.handshake)),
+                CircleAvatar(radius: 50, child: Icon(Icons.person)),
 
                 const SizedBox(height: 30),
 

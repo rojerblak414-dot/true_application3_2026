@@ -1,0 +1,274 @@
+{
+  "users": [
+    {
+      "id": "user1",
+      "name": "ທ່ານ ສົມໄຊ",
+      "email": "somsai@example.com",
+      "password": "b1234569"
+    },
+    {
+      "name": "gg",
+      "email": "dee@gmail.com",
+      "password": "a123456",
+      "id": "0RLmPoifmQs"
+    },
+    {
+      "name": "vart",
+      "email": "vart@gmail.com",
+      "password": "a123456",
+      "id": "YOvjKWgXqaI"
+    },
+    {
+      "name": "seer",
+      "email": "seer@gmail.com",
+      "password": "a123456",
+      "id": "IkIlkQC5HnI"
+    },
+    {
+      "name": "gojo",
+      "email": "gojo@gmail.com",
+      "password": "a123456",
+      "id": "wtKDxLl3pVk"
+    },
+    {
+      "name": "seub",
+      "email": "true@gmail.com",
+      "password": "a123456",
+      "id": "9Ed2oKYQxgU"
+    },
+    {
+      "name": "robirth",
+      "email": "rojerblank414@gmail.com",
+      "password": "a123456",
+      "id": "YYV-a7WDA3o"
+    },
+    {
+      "name": "ນະໂມ",
+      "email": "robirt414@gmail.com",
+      "password": "a123456",
+      "id": "9kzQuAjG4N8"
+    }
+  ],
+  "expenses": [
+    {
+      "userId": "IkIlkQC5HnI",
+      "amount": 20555,
+      "category": "Internet",
+      "createdAt": "2026-06-30T09:12:21.862",
+      "id": "ec0AsxZZvRo"
+    },
+    {
+      "userId": "IkIlkQC5HnI",
+      "amount": 10000,
+      "category": "shopping",
+      "createdAt": "2026-06-30T09:12:50.094",
+      "id": "qFADesh1GGU"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 200,
+      "category": "rice",
+      "createdAt": "2026-08-03T21:26:42.156",
+      "id": "-951PWfXt9k"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 300,
+      "category": "cat",
+      "createdAt": "2026-08-03T21:27:08.248",
+      "id": "GKXb2sf_zCE"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 100,
+      "category": "Internet",
+      "createdAt": "2026-08-03T21:27:31.374",
+      "id": "mHSBHiuao4k"
+    },
+    {
+      "userId": "wtKDxLl3pVk",
+      "amount": 35000,
+      "category": "Car",
+      "createdAt": "2026-08-06T09:55:11.543",
+      "id": "RWpNuW5YzvI"
+    },
+    {
+      "userId": "wtKDxLl3pVk",
+      "amount": 95000,
+      "category": "Internet",
+      "createdAt": "2026-08-06T09:55:11.543",
+      "id": "zAVIPKjC9IA"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 35000,
+      "category": "brt bus",
+      "createdAt": "2026-08-11T08:38:39.152",
+      "id": "rzDHt8EzSNo"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 13000,
+      "category": "ຂົນສົ່ງ",
+      "createdAt": "2026-08-11T09:12:04.954086",
+      "id": "w9q_fzKB2og"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 50000,
+      "category": "Car",
+      "createdAt": "2026-08-11T09:46:07.610151",
+      "id": "4MBdypfl5Ls"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 200000,
+      "category": "mothana",
+      "createdAt": "2026-08-17T21:48:37.290",
+      "id": "bkOLuN4ugv8"
+    },
+    {
+      "userId": "YYV-a7WDA3o",
+      "amount": 10000,
+      "category": "Car",
+      "createdAt": "2026-08-18T09:32:45.088",
+      "id": "D0fU3NeiL8Q"
+    },
+    {
+      "userId": "YYV-a7WDA3o",
+      "amount": 10000,
+      "category": "Internet",
+      "createdAt": "2026-08-18T09:32:45.088",
+      "id": "1ggvNClyQqs"
+    },
+    {
+      "userId": "YYV-a7WDA3o",
+      "amount": 10000,
+      "category": "Food",
+      "createdAt": "2026-08-18T09:32:45.088",
+      "id": "tSZ72VjZkxM"
+    },
+    {
+      "userId": "9kzQuAjG4N8",
+      "amount": 10000,
+      "category": "Car",
+      "createdAt": "2026-08-18T19:01:21.518",
+      "id": "db07xVWwYoE"
+    },
+    {
+      "userId": "9kzQuAjG4N8",
+      "amount": 10000,
+      "category": "Internet",
+      "createdAt": "2026-08-18T19:01:21.518",
+      "id": "ZvXsjYw9Xkk"
+    },
+    {
+      "userId": "9kzQuAjG4N8",
+      "amount": 10000,
+      "category": "Food",
+      "createdAt": "2026-08-18T19:02:03.109",
+      "id": "Ejh52uL23GA"
+    }
+  ],
+  "income": [
+    {
+      "id": "i1",
+      "userId": "user1",
+      "amount": 5000000,
+      "createdAt": "2025-05-01"
+    },
+    {
+      "id": "i2",
+      "userId": "user1",
+      "amount": 500000,
+      "createdAt": "2025-05-10"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 100,
+      "createdAt": "2026-05-28",
+      "date": "2026-05-28T09:26:00.851",
+      "id": "pKL2xgSIzNU"
+    },
+    {
+      "userId": "YOvjKWgXqaI",
+      "amount": 100000000,
+      "createdAt": "2026-05-28",
+      "date": "2026-05-28T09:43:18.529",
+      "id": "9DYetGbKne8"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 45000,
+      "createdAt": "2026-06-09",
+      "date": "2026-06-09T09:13:04.024",
+      "id": "7GAqn9FU7vk"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 470000,
+      "createdAt": "2026-06-15",
+      "category": "Salary",
+      "description": "",
+      "id": "_QrZyKIwQrQ"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 100,
+      "createdAt": "2026-06-15",
+      "category": "Business",
+      "description": "ແຈກຟຣີ",
+      "id": "_NMHlhkaAr4"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 40000,
+      "createdAt": "2026-06-17",
+      "date": "2026-06-17T00:00:00.000",
+      "id": "myLzj7IJumo"
+    },
+    {
+      "userId": "IkIlkQC5HnI",
+      "amount": 20000,
+      "createdAt": "2026-06-30",
+      "date": "2026-06-30T09:12:05.147",
+      "id": "RVwZvUJ7aV0"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 100,
+      "createdAt": "2026-08-03",
+      "date": "2026-08-03T21:25:32.024",
+      "id": "1O-wBQRSwsU"
+    },
+    {
+      "userId": "0RLmPoifmQs",
+      "amount": 36000,
+      "createdAt": "2026-08-11",
+      "date": "2026-08-11T09:16:15.062583",
+      "id": "PyP-JkhgRuk"
+    },
+    {
+      "userId": "9Ed2oKYQxgU",
+      "amount": 36000,
+      "createdAt": "2026-08-18",
+      "date": "2026-08-18T09:10:14.547",
+      "id": "p72g1DZti1Y"
+    },
+    {
+      "userId": "YYV-a7WDA3o",
+      "amount": 10000,
+      "createdAt": "2026-08-18",
+      "date": "2026-08-18T09:33:38.482",
+      "id": "E9ifm1txX_s"
+    },
+    {
+      "userId": "9kzQuAjG4N8",
+      "amount": 10000,
+      "createdAt": "2026-08-18",
+      "date": "2026-08-18T19:01:55.712",
+      "id": "BCktCI2aImM"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

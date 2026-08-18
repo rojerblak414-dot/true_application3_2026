@@ -22,7 +22,7 @@
     "url": "https://github.com/rojerblak414-dot/true_application3_2026/issues"
   },
   "homepage": "https://github.com/rojerblak414-dot/true_application3_2026#readme",
-  "dependencies": {
+  "devDependencies": {
     "json-server": "^1.0.0-beta.15"
   }
 }

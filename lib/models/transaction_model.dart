@@ -1,0 +1,15 @@
+class TransactionModel {
+  final String id;
+  final double amount;
+  final String category;
+  final DateTime createdAt;
+  final bool isExpense;
+
+  const TransactionModel({
+    required this.id,
+    required this.amount,
+    required this.category,
+    required this.createdAt,
+    required this.isExpense,
+  });
+}

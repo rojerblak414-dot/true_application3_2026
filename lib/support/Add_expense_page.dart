@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:true_application_3/models/expense_model.dart';
+import 'package:true_application_3/services/auth_service.dart';
+import 'package:true_application_3/services/expense_service.dart';
+import 'package:true_application_3/services/ocr_parser_service.dart';
+import 'package:true_application_3/services/document_type_detector.dart'
+    show OcrDocType;
 
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
@@ -11,41 +17,330 @@ class AddExpensePage extends StatefulWidget {
 
 class _AddExpensePageState extends State<AddExpensePage> {
   final TextEditingController amountController = TextEditingController();
-  String selectedCategory = "Car";
+  final List<String> categories = ['Car', 'Internet', 'Food'];
 
-  final List<String> categories = ["Car", "Internet", "Food"];
-  //ສ້າງຕົວແປຂອງວັນທີຂອງປະຕິທິນ
+  String selectedCategory = 'Car';
   DateTime selectedDate = DateTime.now();
+  bool isSaving = false;
+  bool isScanning = false;
+
+  // ✅ เก็บรายการ expense ที่โหลดมาแสดง
+  List<ExpenseModel> _expenses = [];
+  bool _loadingList = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses(); // โหลดรายการตอนเปิดหน้า
+  }
+
+  // ✅ โหลดรายการ expense จาก API
+  Future<void> _loadExpenses() async {
+    final userId = await AuthService.getCurrentUserId();
+    if (userId == null) return;
+    try {
+      final list = await ExpenseService.getByUser(userId);
+      // เรียงจากใหม่ → เก่า
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      if (mounted) {
+        setState(() {
+          _expenses = list;
+          _loadingList = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingList = false);
+    }
+  }
+
+  // ✅ ສະແກນສະລິບ/ໃບຮັບ → ອ່ານ OCR → ຕື່ມຂໍ້ມູນລົງໃນຟອມ (ຜູ້ໃຊ້ຍັງແກ້ໄຂໄດ້ກ່ອນກົດ Add)
+  Future<void> _scanSlip() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.camera);
+    if (picked == null) return; // ຜູ້ໃຊ້ຍົກເລີກ
+
+    setState(() => isScanning = true);
+    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    try {
+      final inputImage = InputImage.fromFilePath(picked.path);
+      final recognizedText = await recognizer.processImage(inputImage);
+      final result = OcrParserService.parse(recognizedText);
+
+      if (result.amount == null && result.type == OcrDocType.unknown) {
+        _showMessage('ອ່ານສະລິບບໍ່ອອກ, ກະລຸນາປ້ອນຂໍ້ມູນເອງ');
+        return;
+      }
+
+      setState(() {
+        if (result.amount != null) {
+          amountController.text = result.amount!.toStringAsFixed(0);
+        }
+        if (result.date != null) {
+          selectedDate = result.date!;
+        }
+        // ຖ້າ category ທີ່ເດົາໄດ້ຍັງບໍ່ມີໃນ list, ເພີ່ມເຂົ້າໄປກ່ອນ ແລ້ວຄ່ອຍເລືອກ
+        if (!categories.contains(result.suggestedCategory)) {
+          categories.add(result.suggestedCategory);
+        }
+        selectedCategory = result.suggestedCategory;
+      });
+    } catch (e) {
+      debugPrint('OCR scan error: $e');
+      _showMessage('ສະແກນບໍ່ສຳເລັດ: $e');
+    } finally {
+      recognizer.close();
+      if (mounted) setState(() => isScanning = false);
+    }
+  }
+
+  Future<void> _save() async {
+    final amount = double.tryParse(amountController.text.trim());
+    if (amount == null || amount <= 0) {
+      _showMessage('Please enter a valid amount');
+      return;
+    }
+
+    final userId = await AuthService.getCurrentUserId();
+    if (userId == null) {
+      if (mounted)
+        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+      return;
+    }
+
+    setState(() => isSaving = true);
+    try {
+      await ExpenseService.add(
+        ExpenseModel(
+          id: '',
+          userId: userId,
+          amount: amount,
+          category: selectedCategory,
+          createdAt: selectedDate,
+        ),
+      );
+      amountController.clear(); // ล้างช่องกรอก
+      await _loadExpenses(); // รีโหลดรายการ
+    } catch (_) {
+      if (mounted) _showMessage('Could not save expense');
+    } finally {
+      if (mounted) setState(() => isSaving = false);
+    }
+  }
+
+  // ✅ ลบ expense
+  Future<void> _delete(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('ລົບລາຍການ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ຍົກເລີກ'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('ລົບ', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ExpenseService.delete(id);
+      await _loadExpenses();
+    }
+  }
+
+  // ✅ แก้ไข expense — เปิด dialog แก้ amount + category
+  Future<void> _edit(ExpenseModel expense) async {
+    final editAmountController = TextEditingController(
+      text: expense.amount.toStringAsFixed(0),
+    );
+    String editCategory = expense.category;
+
+    // ถ้า category ของรายการนี้ไม่อยู่ใน list ให้เพิ่มเข้าไปก่อน
+    if (!categories.contains(editCategory)) {
+      categories.add(editCategory);
+    }
+
+    await showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Edit expence'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Amount'),
+              const SizedBox(height: 6),
+              TextField(
+                controller: editAmountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('Category'),
+              const SizedBox(height: 6),
+              DropdownButton<String>(
+                value: editCategory,
+                isExpanded: true,
+                items: categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setDialogState(() => editCategory = v);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newAmount = double.tryParse(
+                  editAmountController.text.trim(),
+                );
+                if (newAmount == null || newAmount <= 0) return;
+
+                final userId = await AuthService.getCurrentUserId();
+                if (userId != null) {
+                  await ExpenseService.update(
+                    ExpenseModel(
+                      id: expense.id,
+                      userId: userId,
+                      amount: newAmount,
+                      category: editCategory,
+                      createdAt: expense.createdAt,
+                    ),
+                  );
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+                await _loadExpenses();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) setState(() => selectedDate = pickedDate);
+  }
+
+  void _showMessage(String msg) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("ເພີ່ມລາຍຈ້າຍ")),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Add Expense'),
+        actions: [
+          IconButton(
+            onPressed: isScanning ? null : _scanSlip,
+            icon: isScanning
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.orange,
+                    ),
+                  )
+                : const Icon(Icons.document_scanner, color: Colors.orange),
+            tooltip: 'ສະແກນສະລິບ', // Scan slip
+          ),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.orange,
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () async {
+          final controller = TextEditingController();
+          final newCategory = await showDialog<String>(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text('Add Category'),
+              content: TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(hintText: 'ຊື່ໝວດໝູ່'),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, controller.text.trim()),
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+          );
+          if (newCategory != null &&
+              newCategory.isNotEmpty &&
+              !categories.contains(newCategory)) {
+            setState(() {
+              categories.add(newCategory);
+              selectedCategory = newCategory;
+            });
+          }
+        },
+      ),
+
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 10),
             Center(
-              child: Image.network(
-                "data:image/png;base64,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",
-
+              child: Image.asset(
+                'assets/images/come.png',
                 height: 120,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.shopping_bag,
+                  size: 96,
+                  color: Colors.orange,
+                ),
               ),
             ),
+            const SizedBox(height: 24),
 
-            const SizedBox(height: 30),
-
-            const Text("Enter Amount"),
+            const Text('Amount'),
             const SizedBox(height: 8),
-
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                hintText: "ຈຳນວນ",
+                hintText: 'Amount',
                 filled: true,
                 fillColor: Colors.grey[300],
                 border: OutlineInputBorder(
@@ -54,12 +349,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
-            const Text("Enter Category"),
+            const Text('Category'),
             const SizedBox(height: 8),
-
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               decoration: BoxDecoration(
@@ -70,47 +362,27 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 value: selectedCategory,
                 isExpanded: true,
                 underline: const SizedBox(),
-                items: categories.map((item) {
-                  return DropdownMenuItem(value: item, child: Text(item));
-                }).toList(),
+                items: categories
+                    .map(
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item)),
+                    )
+                    .toList(),
                 onChanged: (value) {
-                  setState(() {
-                    selectedCategory = value!;
-                  });
+                  if (value != null) setState(() => selectedCategory = value);
                 },
               ),
             ),
-
             const SizedBox(height: 20),
-            //ສວນທີເລືອກວັນທີ
             Row(
               children: [
-                InkWell(
-                  onTap: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-
-                    if (pickedDate != null) {
-                      setState(() {
-                        selectedDate = pickedDate;
-                      });
-                    }
-                  },
-                  child: const Icon(
-                    Icons.calendar_today,
-                    color: Colors.orange,
-                    size: 28,
-                  ),
+                IconButton(
+                  onPressed: _pickDate,
+                  icon: const Icon(Icons.calendar_today, color: Colors.orange),
                 ),
-
-                const SizedBox(width: 15),
-
+                const SizedBox(width: 8),
                 Text(
-                  "${selectedDate.day}-${selectedDate.month}-${selectedDate.year}",
+                  '${selectedDate.day}-${selectedDate.month}-${selectedDate.year}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -118,46 +390,150 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ],
             ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 200,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (amountController.text.isEmpty) return;
-
-                      await FirebaseFirestore.instance.collection("expenses").add({
-                        "amount": double.parse(amountController.text),
-                        "category": selectedCategory,
-                        "userId": FirebaseAuth.instance.currentUser!.uid,
-                        "createdAt": Timestamp.now(),
-                        // ignore: equal_keys_in_map ບັນທືກມື້ທີເຫຼີອ ກຽວກັບປະຕິທິນ
-                        "createdAt": Timestamp.fromDate(selectedDate),
-                      });
-
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-
-                    child: const Text(
-                      "ເພີ່ມ",
-                      style: TextStyle(fontSize: 20, color: Colors.black),
+            const SizedBox(height: 24),
+            Center(
+              child: SizedBox(
+                width: 200,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: isSaving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
+                  child: isSaving
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Add',
+                          style: TextStyle(fontSize: 20, color: Colors.black),
+                        ),
                 ),
-              ],
+              ),
             ),
+
+            const SizedBox(height: 30),
+            const Divider(),
+            const SizedBox(height: 10),
+
+            const Text(
+              'ລາຍຈ່າຍທັງໝົດ',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            _loadingList
+                ? const Center(child: CircularProgressIndicator())
+                : _expenses.isEmpty
+                ? const Center(
+                    child: Text(
+                      'ຍັງບໍ່ມີລາຍການ',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _expenses.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final e = _expenses[index];
+                      return Column(
+                        children: [
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.red.shade100,
+                              child: const Icon(
+                                Icons.arrow_downward,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              e.category,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${e.createdAt.day.toString().padLeft(2, '0')} '
+                              '${_monthName(e.createdAt.month)} '
+                              '${e.createdAt.year}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            trailing: Text(
+                              '- ₭${e.amount.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () => _edit(e),
+                                icon: const Icon(
+                                  Icons.edit,
+                                  size: 16,
+                                  color: Colors.orange,
+                                ),
+                                label: const Text(
+                                  'Edit',
+                                  style: TextStyle(color: Colors.orange),
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _delete(e.id),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  size: 16,
+                                  color: Colors.red,
+                                ),
+                                label: const Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+            const SizedBox(height: 80),
           ],
         ),
       ),
     );
+  }
+
+  String _monthName(int m) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[m - 1];
   }
 }

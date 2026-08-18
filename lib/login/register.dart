@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:true_application_3/component/inputfileld_register.dart';
+import 'package:true_application_3/services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,120 +19,119 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isLoading = false;
 
   Future<void> register() async {
-    // ✅ ກວດລະຫັດຜ່ານ confirm password
-    if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Password ไม่ตรงกัน")));
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showMessage('Please fill in all fields');
+      return;
+    }
+    if (!email.contains('@')) {
+      _showMessage('Email format is not valid');
+      return;
+    }
+    if (password.length < 6) {
+      _showMessage('Password must be at least 6 characters');
+      return;
+    }
+    if (password != confirmPassword) {
+      _showMessage('Passwords do not match');
       return;
     }
 
     setState(() => isLoading = true);
-
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("ສະມັກສະມາຊິກສຳເລັດ")));
-
+      await AuthService.register(name, email, password);
+      if (!mounted) return;
+      _showMessage('Register success');
       Navigator.pop(context);
-    } on FirebaseAuthException catch (e) {
-      String message = "ເກີດຂໍ້ຜິດພາດ";
-
-      if (e.code == 'email-already-in-use') {
-        message = "ອີເມວນີຖືກໃຊ້ງານແລ້ວ";
-      } else if (e.code == 'weak-password') {
-        message = "ລະຫັດຕ້ອງຫຼາຍກ່ວາ 6 ຕົວອັກສອນ";
-      } else if (e.code == 'invalid-email') {
-        message = "ຮູບແບບອີເມວ ບໍ່ຖືກຕ້ອງ";
-      }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      if (!mounted) return;
+      final message = e.toString().contains('email-already-in-use')
+          ? 'Email is already in use'
+          : 'Register failed';
+      _showMessage(message);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
+  }
 
-    setState(() => isLoading = false);
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(25),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
               ClipRRect(
-                borderRadius: BorderRadiusGeometry.circular(60),
+                borderRadius: BorderRadius.circular(60),
                 child: Image.asset(
-                  "assets/images/in.png",
+                  'assets/images/in.png',
                   height: 100,
                   width: 100,
                   fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 20),
-
               const Text(
-                "ລົງທະບຽນ",
+                'ສະໝັກສະມາຊິກ',
                 style: TextStyle(
                   fontSize: 22,
                   color: Colors.blue,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // ✅ ແກ້ controller ຖືກຕ້ອງແລ້ວ
               inputfileld_register(
-                label: "Name",
+                label: 'ຊື່ແລະນາມສະກຸນ',
                 controller: nameController,
                 obscure: false,
               ),
-
               const SizedBox(height: 15),
-
               inputfileld_register(
-                label: "Email Address",
+                label: 'Email ',
                 controller: emailController,
                 obscure: false,
               ),
               const SizedBox(height: 15),
-
               inputfileld_register(
-                label: "Password",
+                label: 'ລະຫັດຜານ',
                 controller: passwordController,
                 obscure: true,
               ),
               const SizedBox(height: 15),
-
               inputfileld_register(
-                label: "Confirm Password",
+                label: 'ຢືນຢັນລະຫັດຜານ',
                 controller: confirmPasswordController,
                 obscure: true,
               ),
-
               const SizedBox(height: 40),
-
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -149,20 +148,16 @@ class _RegisterPageState extends State<RegisterPage> {
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("ສະໝັກ", style: TextStyle(fontSize: 18)),
+                            Text('Register', style: TextStyle(fontSize: 18)),
                             SizedBox(width: 10),
                             Icon(Icons.arrow_forward),
                           ],
                         ),
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              const Text(
-                "Already have an account?",
-                style: TextStyle(fontSize: 16),
-              ),
+              const Text('ມີບັນຊີຢູ່ແລ້ວ ?', style: TextStyle(fontSize: 16)),
+              Text("ເຂົ້າສູລະບົບ !", style: TextStyle(fontSize: 16)),
             ],
           ),
         ),
